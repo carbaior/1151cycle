@@ -8,16 +8,11 @@ Such cycles exist and the BEST OF THEM ALL begins EXACTLY 420403 days (/365.25= 
 
 ![The 1151 years cycle.](1151_cycle.png)
 
-Some 'newchronologers' find this preposterous, and think that *'is a completely ridiculous idea that such a cycle exists'*. 
-*'So ridiculous'*, they don't even bother to go into it.
-
-*Others* have really checked its existence and decided to just remain silent about this, the reason being quite obvious.
-
 Was this cycle employed to mess with chronology in the middle ages is something that SHOULD AND MUST be explored. As for the 'why', an obvious reason suggests itself.
 
 A more than possible link of this cycle with the Gregorian Reform of 1582 was the subject of a research I had to put to a drastic end after much more urgent issue with historical chronology arised, (see https://github.com/carbaior/sescc)
 
-After a brief code clean up, this SIMPLE tool will be uploaded to this repository for anyone to check its 'ridiculousness'.
+After a brief code clean up, this SIMPLE tool will be uploaded to this repository.
 
 Meanwhile, an infographic of this phenomemon can be checked at: https://odysee.com/@CarlosBaiget:4/astronomical-proof-of-fomenko-and:0
 
