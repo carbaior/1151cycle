@@ -6,6 +6,8 @@ A simple tool to search for cycles of the 'solar system of the ancients' (define
 
 Such cycles exist and the BEST OF THEM ALL begins EXACTLY 420403 days (1151.001 years) BEFORE OF AFTER any given date. This synchronism is maintained for centuries or even millenia.
 
+![The 1151 years cycle.](1151_cycle.png)
+
 Some 'newchronologers' find this preposterous, and think that 'is a completely ridiculous idea that such a cycle exists'.
 
 *Others* have really checked its existence and decided to just remain silent about this, the reason being quite obvious.
