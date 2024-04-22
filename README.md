@@ -4,7 +4,7 @@
 
 A <ins>simple</ins> tool to search for cycles of the 'solar system of the ancients' (defined above) gives an atonishing answer:
 
-Such cycles exist and the BEST OF THEM ALL begins EXACTLY 420403 days (/365.25= **1151 years**) BEFORE OF AFTER any given date. This synchronism is maintained for centuries or even millenia.
+Such cycles exist and the BEST OF THEM ALL begins EXACTLY 420403 days (/365.25= **1151 years**) BEFORE OF AFTER any given date. This synchronism is maintained for centuries or even millennia.
 
 ![The 1151 years cycle.](1151_cycle.png)
 
@@ -16,7 +16,7 @@ Was this cycle employed to mess with chronology in the middle ages is something 
 
 A more than possible link with the Gregorian Reform of 1582 was the subject of a research I had to put to an end after much more urgent issue with historical chronology arised, (see https://github.com/carbaior/sescc)
 
-After a brief code clean up, this SIMPLE tool will be uploaded to this repository for anyone to check its ridiculousness.
+After a brief code clean up, this SIMPLE tool will be uploaded to this repository for anyone to check its 'ridiculousness'.
 
 Meanwhile, an infographic of this phenomemon can be checked at: https://odysee.com/@CarlosBaiget:4/astronomical-proof-of-fomenko-and:0
 
