@@ -2,7 +2,7 @@
 
 ## Search for cycles in the ancient conception of the Solar System: Sun,Moon, Mercury to Saturn
 
-A simple tool to search for cycles of the 'solar system of the ancients' (defined above) gives an atonishing answer:
+A <ins>simple</ins> tool to search for cycles of the 'solar system of the ancients' (defined above) gives an atonishing answer:
 
 Such cycles exist and the BEST OF THEM ALL begins EXACTLY 420403 days (1151.001 years) BEFORE OF AFTER any given date. This synchronism is maintained for centuries or even millenia.
 
