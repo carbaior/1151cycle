@@ -9,6 +9,7 @@ Such cycles exist and the BEST OF THEM ALL begins EXACTLY 420403 days (/365.25= 
 ![The 1151 years cycle.](1151_cycle.png)
 
 Some 'newchronologers' find this preposterous, and think that *'is a completely ridiculous idea that such a cycle exists'*. 
+*'So ridiculous'*, they don't even bother to go into it.
 
 *Others* have really checked its existence and decided to just remain silent about this, the reason being quite obvious.
 
