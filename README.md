@@ -17,7 +17,7 @@ A more than possible link of this cycle with the Gregorian Reform of 1582 was th
 This program was made to answer a simple question: 
 **When in the past or future will the planets of the solar system of the ancients (Sun, Moon, Mercury to Saturn), be in positions that closely resemble those they held on a specific date?**
 
-The answer of 1151 years is most surprising, as this time span is exactly what the "New Chronology of Fomenko and Nosovsky" (see ![chronologia.org](https://chronologia.org) maintains separates Christ (born 1) and Andronikos I Komnenos (allegedly born 1152), whom they consider duplicates of the same historical figure (more information in the book by A.T. Fomenko and G.V. Nosovsky "Tsar of the Slavs").
+The answer of 1151 years is most surprising, as this time span is exactly what the "New Chronology of Fomenko and Nosovsky" (see ![chronologia.org](https://chronologia.org) maintains separates Christ (born 1) and Andronikos I Komnenos (allegedly born 1152 = 1151 years _after_), whom they consider duplicates of the same historical figure (more information in the book by A.T. Fomenko and G.V. Nosovsky "Tsar of the Slavs").
 
 Is this purely astronomical finding a confirmation or a refutation of their identification?
 
