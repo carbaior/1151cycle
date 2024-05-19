@@ -71,7 +71,8 @@ for x in listanav:
 	print (f"Computing series beggining on year {x[1]} ({pc}%)          ", end="\r")
 	serie = Parallel(n_jobs=-1)(delayed(desvest)(l) for l in range(series_long))
 	avgserie = np.mean(serie)/10
-	linea=[x[0]-jd_ref,round(avgserie,1),x[1]]
+	stdserie = np.std(serie)/10
+	linea=[x[0]-jd_ref,round(avgserie,1)+round(stdserie,1),x[1]]
 	listaseries.append(linea)
 
 listaseries=np.array(listaseries)
@@ -80,10 +81,10 @@ srtd = listaseries[np.argsort(listaseries[:, 1])]
 
 print()
 print()
-print ("The TWO best cycles found are:")
+print ("The THREE best cycles found are:")
 print()
 print("Days before/after\tYears before/after\tAverage deviation")
-for elem in srtd[:2]:
+for elem in srtd[:3]:
     print("{:>18}\t{:>18}\t{:>16}º".format(int(elem[0]), int(elem[0]/365.25), elem[1]))
 	
 #write to file	
