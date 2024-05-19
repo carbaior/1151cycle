@@ -5,7 +5,6 @@
 #copyleft 2024 Carlos Baiget Orts (asinfreedom@gmail.com)
 #https://github.com/carbaior/horoscycles
 
-
 import lzma, numpy as np
 from skyfield.api import Star, load, GREGORIAN_START
 from joblib import Parallel, delayed
@@ -85,7 +84,7 @@ print ("The TWO best cycles found are:")
 print()
 print("Days before/after\tYears before/after\tAverage deviation")
 for elem in srtd[1:3]:
-    print("{:>18}\t{:>18}\t{:>16}º".format(int(elem[0]), int(elem[0]/365.25), elem[1]))
+    print("{:>18}\t{:>18}\t{:>16}º".format(int(elem[0]), int(elem[0]/365.25), round(elem[1],1)))
 	
 #write to file	
 filename = "cycles.csv"
