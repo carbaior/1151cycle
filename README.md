@@ -1,4 +1,4 @@
-# 1151cycle
+# horoscycles.py
 
 ## Search for cycles in the ancient conception of the Solar System: Sun,Moon, Mercury to Saturn
 
@@ -12,8 +12,42 @@ Was this cycle employed to mess with chronology in the middle ages is something 
 
 A more than possible link of this cycle with the Gregorian Reform of 1582 was the subject of a research I had to put to a drastic end after much more urgent issue with historical chronology arised, (see https://github.com/carbaior/sescc)
 
-After a brief code clean up, this SIMPLE tool will be uploaded to this repository.
+## What is this about?
 
-Meanwhile, an infographic of this phenomemon can be checked at: https://odysee.com/@CarlosBaiget:4/astronomical-proof-of-fomenko-and:0
+This program was made to answer a simple question: 
+**When in the past or future will the planets of the solar system of the ancients (Sun, Moon, Mercury to Saturn), be in positions that closely resemble those they held on a specific date?**
 
-Relaxed conditions on this code also explain the astronomical origin of the so called 'chronological shifts".
+The answer of 1151 years is most surprising, as this time span is exactly what the "New Chronology of Fomenko and Nosovsky" (see ![chronologia.org](https://chronologia.org) maintains separates Christ (born 1) and Andronikos I Komnenos (allegedly born 1152), whom they consider duplicates of the same historical figure (more information in the book by A.T. Fomenko and G.V. Nosovsky "Tsar of the Slavs").
+
+Is this purely astronomical finding a confirmation or a refutation of their identification?
+
+It is not an easy question to answer for most people, but apparently, it is very obvious to them themselves, as when this finding was communicated to them (in late 2023), they quickly dismissed it (as 'it was not of interest to their research')!??.
+
+How is it possible that a **purely astronomical cycle** of the same magnitude as a fundamental premise of New Chronology is not of interest to them? It is certainly something very difficult to explain or even impossible to do so. It happens that bitter implications for NC may arise from this research.
+
+But what are the implications? The main one is quite obvious: horoscycles.py compares the similarity of planetary positions over several centuries. This means that it finds day Y in the past such that the planets were most similar to a reference day X. Just as day Y+1 with X+1, Y+2 with X+2... and likewise for several thousand days. Therefore, ALL horoscopes can plausibly fit into a temporal shift of -1151 years. This aligns exactly with the horoscopes of Andronikos and Christ.
+
+It seems like a worthy subject of study. On the other hand, the lack of explanations from the most interested parties could suggest that it has already been studied, and the conclusions are not favorable to their cause.
+
+An infographic of this phenomemon can be checked at: ![The 1151 years cycle](https://www.youtube.com/watch?v=W4z_anTXi9U) 
+
+Relaxed conditions on this code also explain the astronomical origin of the so called 'chronological shifts", which be included in future versions. As well as a the tool to generate the infographic.
+
+## How to use this program?
+
+horoscycles needs the following libraries: numpy, skyfield and numpy. You can install them with pip: `pip install numpy skyfield numpy`
+
+Then launch horoscycles.py:
+
+`$ python horoscycles.py`
+
+Output is self-explanatory. By default the reference date is 1/12/25 (middle of the interval and relevant date) and the series length is 1 century. Longer series will not give another answer. The search range is from -1500 to 1500 A.D.
+You can change the parameters in the source code.
+
+Finaly, the program creates an output file `cycles.csv`, that can be loaded to a spreadsheet to generate a scatter plot like the one above.
+
+Doubts, suggestions, i've not explained myself well enough, etc.: email me at asinfreedom@gmail.com
+
+
+
+
