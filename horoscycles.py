@@ -81,10 +81,10 @@ srtd = listaseries[np.argsort(listaseries[:, 1])]
 
 print()
 print()
-print ("The THREE best cycles found are:")
+print ("The TWO best cycles found are:")
 print()
 print("Days before/after\tYears before/after\tAverage deviation")
-for elem in srtd[:3]:
+for elem in srtd[1:3]:
     print("{:>18}\t{:>18}\t{:>16}º".format(int(elem[0]), int(elem[0]/365.25), elem[1]))
 	
 #write to file	
