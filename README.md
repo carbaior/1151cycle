@@ -48,7 +48,7 @@ You can change the parameters in the source code.
 
 Finaly, the program creates an output file `cycles.csv`, that can be loaded to a spreadsheet to generate a scatter plot like the one above.
 
-The program takes a long time to compute all series. In the default configuration, it will produce the `cycles.csv` which can be found in this repository.
+The program takes a long time to compute all series (40 minutes in a 4-core i5-4440 CPU @ 3.10GHz). In the default configuration, it will produce the `cycles.csv` which can be found in this repository.
 You can load this file to a spreadsheet to draw a scatter plot that visually compares the series for all year. You'll probably have to reduce the size of the dots for them not to overlap.
 
 The reference date has mean 0º of deviation with itself, so it will appear at the lowest point (circled). The best two synchronisms are just below 20º (arrows), which are exactly 420403 days in the past or in the future ( 420403/365.25=1151 years)
