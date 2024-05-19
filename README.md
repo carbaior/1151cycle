@@ -37,6 +37,8 @@ Relaxed conditions on this code also explain the astronomical origin of the so c
 
 ## How to use this program?
 
+NOTE: I'm sorry the current version is very slow, I will upload a much faster version soon.
+
 horoscycles needs the following libraries: numpy, skyfield and numpy. You can install them with pip: `pip install numpy skyfield numpy`
 
 Then launch horoscycles.py:
