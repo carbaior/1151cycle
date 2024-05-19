@@ -74,9 +74,8 @@ for x in listanav:
 	b = np.abs(a2 - a1)
 	b = np.where(b > 1800, 3600 - b, b)
 	mean_b = np.mean(b, axis=1).reshape(-1, 1)
-	b = np.hstack((b, mean_b))
-	m1 = np.mean(b[:, -1])	
-	m2 = np.std(b[:, -1])	
+	m1 = np.mean(mean_b)
+	m2 = np.std(mean_b)
 	linea=[x[0]-jd_ref,round((m1+m2)/10,1),x[1]]
 	listaseries.append(linea)
 	serie=[]
