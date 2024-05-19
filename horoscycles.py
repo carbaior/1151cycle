@@ -9,20 +9,6 @@
 import lzma, numpy as np
 from skyfield.api import Star, load, GREGORIAN_START
 
-def ang(a,b):
-	if (a < b):
-		a,b = b,a
-	if (res := a-b) > 1800:
-		res=3600-res
-	return res
-	
-def avg(lst):
-	return sum(lst) / len(lst)
-
-def std(lst):
-	lst=np.array(lst)
-	return np.std(lst)
-
 #Reference date: (any date is as good as any other)
 day=25
 month=12
@@ -45,7 +31,6 @@ for i in range(r_ini, r_fin):
 	listanav.append([int(t.tdb),i])
 print ("Done.")
 print ()
-print ()    
 print ("Loading planets positions...")
 data_list = []
 j=0
@@ -79,17 +64,20 @@ print ()
 tot=len(listanav)
 act=0
 
+a=np.array(a)
+a1 = a[pos_jd_ref:pos_jd_ref+series_long, 1:8]
 for x in listanav:
 	act+=1
 	pc=round(((act*100)/tot),1)
 	print (f"Computing series beginning on year {x[1]} ({pc}%)          ", end="\r")
-	for l in range(0,series_long):
-		i=x[2]+l
-		j=pos_jd_ref+l
-		b = [ang(a[i][1],a[j][1]),ang(a[i][2],a[j][2]),ang(a[i][3],a[j][3]),ang(a[i][4],a[j][4]),ang(a[i][5],a[j][5]),ang(a[i][6],a[j][6]),ang(a[i][7],a[j][7])]
-		serie.append(avg(b))
-	
-	linea=[x[0]-jd_ref,round(avg(serie)/10,1)+round(std(serie)/10,1),x[1]]
+	a2 = a[x[2]:x[2]+series_long, 1:8]
+	b = np.abs(a2 - a1)
+	b = np.where(b > 1800, 3600 - b, b)
+	mean_b = np.mean(b, axis=1).reshape(-1, 1)
+	b = np.hstack((b, mean_b))
+	m1 = np.mean(b[:, -1])	
+	m2 = np.std(b[:, -1])	
+	linea=[x[0]-jd_ref,round((m1+m2)/10,1),x[1]]
 	listaseries.append(linea)
 	serie=[]
 
