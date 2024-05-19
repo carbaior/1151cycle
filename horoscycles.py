@@ -14,6 +14,9 @@ day=25
 month=12
 year=1
 
+#timespan of series (greater values wont give other solutions)
+centuries=1 
+
 ts = load.timescale()
 ts.julian_calendar_cutoff = GREGORIAN_START
 
@@ -52,7 +55,6 @@ print()
 
 serie=[]
 listaseries=[]
-centuries=1 #timespan of series (greater values wont give other solutions)
 series_long=int(100*centuries*365.25) # four centuries: 400*365.25=146100
 
 print (f"Beginning date of the reference series: ** {year}/{month}/{day} (Julian Day {jd_ref}) **")
