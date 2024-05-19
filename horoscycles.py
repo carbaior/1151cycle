@@ -54,8 +54,8 @@ pos_jd_ref = np.searchsorted(plposdat[:, 0], jd_ref)
 a = plposdat[:, 1:8]
 serie=[]
 listaseries=[]
-centuries=100 #timespan of series (greater values wont give other solutions)
-series_long=int(centuries*365.25) # four centuries: 400*365.25=146100
+centuries=1 #timespan of series (greater values wont give other solutions)
+series_long=int(100*centuries*365.25)
 
 print (f"Beginning date of the reference series: ** {year}/{month}/{day} (Julian Day {jd_ref}) **")
 print ()
