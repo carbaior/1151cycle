@@ -25,7 +25,9 @@ It is not an easy question to answer for most people, but apparently, it is very
 
 How is it possible that a **purely astronomical cycle** of the same magnitude as a fundamental premise of New Chronology is not of interest to them? It is certainly something very difficult to explain or even impossible to do so. It happens that bitter implications for NC may arise from this research.
 
-But what are the implications? The main one is quite obvious: horoscycles.py compares the similarity of planetary positions over several centuries. This means that it finds day Y in the past such that the planets were most similar to a reference day X. Just as day Y+1 with X+1, Y+2 with X+2... and likewise for several thousand days. Therefore, ALL horoscopes can plausibly fit into a temporal shift of -1151 years. This aligns exactly with the horoscopes of Andronikos and Christ.
+But what are the implications? The main one is quite obvious: horoscycles.py compares the similarity of planetary positions over several centuries. This means that it finds day Y in the past such that the planets were most similar to a reference day X. Just as day Y+1 with X+1, Y+2 with X+2... and likewise for several thousand days. This is what is called a 'series': in the default configuration a timespan of 36525 days (one century), starting at the reference date, which is compared with the same series starting with a candidate date (the same calendar date of every year from -1500 to 1500). Therefore, ALL horoscopes can plausibly fit into a temporal shift of -1151 years. 
+
+This aligns exactly not only with the horoscopes of Andronikos and Christ, but with those pointing to dates **after** them, in a **coherent** manner.
 
 It seems like a worthy subject of study. On the other hand, the lack of explanations from the most interested parties could suggest that it has already been studied, and the conclusions are not favorable to their cause.
 
@@ -45,6 +47,12 @@ Output is self-explanatory. By default the reference date is 1/12/25 (middle of 
 You can change the parameters in the source code.
 
 Finaly, the program creates an output file `cycles.csv`, that can be loaded to a spreadsheet to generate a scatter plot like the one above.
+
+The program takes a long time to compute all series. In the default configuration, it will produce the `cycles.csv` which can be found in this repository.
+You can load this file to a spreadsheet to draw a scatter plot that visually compares the series for all year. You'll probably have to reduce the size of the dots for them not to overlap.
+
+The reference date has mean 0º of deviation with itself, so it will appear at the lowest point (circled). The best two synchronisms are just below 20º (arrows), which are exactly 420403 days in the past or in the future ( 420403/365.25=1151 years)
+![The 1151 years cycle.](1151cycle.png)
 
 Doubts, suggestions, i've not explained myself well enough, etc.: email me at asinfreedom@gmail.com
 
