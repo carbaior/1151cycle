@@ -40,6 +40,11 @@ j=0
 k=0
 tam=len(listanav)
 a=[]
+#planetpos.dat.lzma, 11828717 bytes, md5sum: 1f0ac0959af1915316d0c2bc0f1e3e59
+#FORMAT:
+#JD SUN MOON SATURN JUPITER MARS VENUS MERCURY YEAR MONTH DAY
+#
+#positions in tenths of degree (J2000), computed with Skyfield (https://rhodesmill.org/skyfield/)
 with lzma.open('planetpos.dat.lzma', 'rt') as f:
 	for line in f:
 		reg=[int(value) for value in line.strip().split('\t')]
