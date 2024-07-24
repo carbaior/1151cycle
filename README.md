@@ -56,7 +56,9 @@ The reference date has mean 0º of deviation with itself, so it will appear at t
 
 How can the 1151 cycle be a hint of a chronological manipulation of the Gregorian Reform, I will explain in the future. 
 
-For the moment, this hypothesis is coded in the 'Gregorian Reform' option of 'Benjamin', my online horoscope dating program: ![Benjamin](https://carbaior.github.io/). Without this flag, the "Leiden Aratea" is dated to 1433 in perfect concordante with NC date of the Carolingian Epoch. But when activated, the same horoscope gives the year of 816, **exactly** where the "Scaligerian chronology" says it **must** belong. How is this possible? Just as Fomenko and Nosovsky about the most probable reason.
+For the moment, this hypothesis is coded in the 'Gregorian Reform' option of 'Benjamin', my online horoscope dating program: ![Benjamin](https://carbaior.github.io/). Without this flag, the "Leiden Aratea" is dated to 1433 in perfect concordante with NC date of the Carolingian Epoch. But when activated, the same horoscope gives the year of 816, **exactly** where the "Scaligerian chronology" says it **must** belong. 
+
+To know why is this even possible, just ask Fomenko and Nosovsky about the most probable reason.
 
 Doubts, suggestions, i've not explained myself well enough, etc.: email me at asinfreedom@gmail.com
 
