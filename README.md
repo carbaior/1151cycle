@@ -6,7 +6,7 @@ A <ins>simple</ins> tool to search for cycles of the 'solar system of the ancien
 
 Such cycles exist and the BEST OF THEM ALL begins EXACTLY 420403 days (/365.25= **1151 years**) BEFORE OF AFTER any given date. This synchronism is maintained for centuries or even millennia.
 
-![The 1151 years cycle.](1151_cycle.png)
+![The 1151 years cycle.](1151WTF.png)
 
 Was this cycle employed to mess with chronology in the middle ages is something that SHOULD AND MUST be explored. As for the 'why', an obvious reason suggests itself.
 
