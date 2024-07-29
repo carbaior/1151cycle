@@ -23,7 +23,10 @@ Is this purely astronomical finding a confirmation or a refutation of their iden
 
 It is not an easy question to answer for most people, but apparently, it is very obvious to them themselves, as when this finding was communicated to them (in late 2023), they quickly dismissed it (as 'it was not of interest to their research')!??.
 
-How is it possible that a **purely astronomical cycle** of the same magnitude as a fundamental premise of New Chronology is not of interest to them? It is certainly something very difficult to explain or even impossible to do so. It happens that bitter implications for NC may arise from this research.
+How is it possible that a **purely astronomical cycle** of the same magnitude as a fundamental premise of New Chronology is not of interest to them? It is certainly something very difficult to explain or even impossible to do so.
+It is a very strange statement indeed, since Chapter 5 of Volume 3 of Book 2 - "Heavenly Calendar of the Ancients" is precisely called "ASTRAL CALENDAR. HOW OFTEN DOES THE SAME HOROSCOPE REPEAT?". And the reason for this chapter is to validate the results of their HOROS program.
+
+It happens that bitter implications for NC may arise from this research.
 
 But what are the implications? The main one is quite obvious: horoscycles.py compares the similarity of planetary positions over several centuries. This means that it finds day Y in the past such that the planets were most similar to a reference day X. Just as day Y+1 with X+1, Y+2 with X+2... and likewise for several thousand days. This is what is called a 'series': in the default configuration a timespan of 36525 days (one century), starting at the reference date, which is compared with the same series starting with a candidate date (the same calendar date of every year from -1500 to 1500). Therefore, ALL horoscopes can plausibly fit into a temporal shift of -1151 years. 
 
