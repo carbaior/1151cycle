@@ -57,8 +57,6 @@ You can load this file to a spreadsheet to draw a scatter plot that visually com
 The reference date has mean 0º of deviation with itself, so it will appear at the lowest point (circled). The best two synchronisms are just above 20º (arrows), which are exactly 420403 days in the past or in the future ( 420403/365.25=1151 years)
 ![The 1151 years cycle.](1151cycle.png)
 
-How can the 1151 cycle be a hint of a chronological manipulation of the Gregorian Reform, I will explain in the future. 
-
 For the moment, this hypothesis is coded in the 'Gregorian Reform' option of 'Benjamin', my online horoscope dating program: ![Benjamin](https://carbaior.github.io/). Without this flag, the "Leiden Aratea" is dated to 1433 in perfect concordante with NC date of the Carolingian Epoch. But when activated, the same horoscope gives the year of 816, **exactly** where the "Scaligerian chronology" says it **must** belong. 
 
 To know why is this even possible, just ask Fomenko and Nosovsky about the most probable reason.
