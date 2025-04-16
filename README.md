@@ -1,3 +1,9 @@
+## ▶️ Run it in your browser
+
+You can run the analysis directly in your browser — **no installation or account required** — using Binder:
+
+[![Launch in Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/carbaior/1151cycle/HEAD?filepath=1151_years_cycle.ipynb)
+
 # horoscycles.py
 
 # The discovery of the 1151-year planetary cycle this algorithm PROVES, inevitably implies the end of the New Chronology of Fomenko and Nosovsky.
