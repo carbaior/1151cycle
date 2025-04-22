@@ -8,12 +8,6 @@ You can run the analysis directly in your browser — **no installation or accou
 
 # horoscycles.py
 
-# The discovery of the 1151-year planetary cycle this algorithm PROVES, inevitably implies the end of the New Chronology of Fomenko and Nosovsky.
-
-# Both have been **hiding** this discovery for over a year, since October 2023, when they were personally informed.
-
-# Their knowledge and understanding of this indisputable refutation of the New Chronology is a fact that I can prove, and I will undoubtedly do so if they choose to deny it.
-
 ## Search for cycles in the ancient conception of the Solar System: Sun,Moon, Mercury to Saturn
 
 A <ins>simple</ins> tool to search for cycles of the 'solar system of the ancients' (defined above) gives an atonishing answer:
