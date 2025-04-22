@@ -1,3 +1,5 @@
+Related paper: https://arxiv.org/abs/2504.12962
+
 ## ▶️ Run it in your browser
 
 You can run the analysis directly in your browser — **no installation or account required** — using Binder:
