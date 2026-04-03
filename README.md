@@ -23,7 +23,7 @@ Key results:
 | z-score (descriptive) | 3.26σ below mean of 2,600 candidates |
 | Candidates worse than T\* | 100% |
 | Temporal stability (std over 1,200 yr) | 0.097° |
-| Robust from series length | 1 year |
+| Robust from series length | 1 year or more |
 | Neptune residue at T\* | −5.3° (participates) |
 | Uranus residue at T\* | −109° (does not participate) |
 
