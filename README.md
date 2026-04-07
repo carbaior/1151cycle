@@ -2,9 +2,12 @@
 
 **Empirical detection of a 1151-year multi-planet quasi-commensurability in the Solar System**
 
-Carlos Baiget Orts — [asinfreedom@gmail.com](mailto:asinfreedom@gmail.com) — ORCID: [0009-0000-6725-5188](https://orcid.org/0009-0000-6725-5188)
+[![DOI](https://zenodo.org/badge/790134060.svg)](https://doi.org/10.5281/zenodo.19457599)
+[![arXiv](https://img.shields.io/badge/arXiv-2604.03049-b31b1b.svg)](https://arxiv.org/abs/2604.03049)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> *Preprint:* arXiv:XXXX.XXXXX (astro-ph.EP)
+
+Carlos Baiget Orts — [asinfreedom@gmail.com](mailto:asinfreedom@gmail.com) — ORCID: [0009-0000-6725-5188](https://orcid.org/0009-0000-6725-5188)
 
 ---
 
