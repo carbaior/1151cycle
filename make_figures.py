@@ -1,25 +1,27 @@
 #!/usr/bin/env python3
 """
-make_figures.py
-===============
+make_figures_v2.py
+==================
 Generates publication-quality figures for the 1151-year heliocentric
-quasi-commensurability paper.
+quasi-commensurability paper (7-planet version: Mercury through Saturn + Neptune).
 
 Figures produced:
-  fig1_scatter.pdf    — Score S(T) vs candidate interval (all 5501 candidates)
-  fig2_histogram.pdf  — Score distribution histogram
-  fig3_panels.pdf     — Angular offset per planet over time (2 panels)
-  fig4_polar.pdf      — Polar snapshots at 5 epochs with per-planet radii
+  fig1_scatter.pdf    -- Score S(T) vs candidate interval (all candidates)
+  fig2_histogram.pdf  -- Score distribution histogram
+  fig3_panels.pdf     -- Angular offset per planet over time (2 panels)
+  fig4_convergence.pdf -- Score convergence vs series length
+  fig5_polar.pdf      -- Polar snapshots at 5 epochs with per-planet radii
 
-Input files (from helio1151.py):
+Input files (from helio1151_v2.py):
   helio_results.csv
   helio_panel_fast.csv
-  helio_panel_slow.csv
-  helio_polar.csv
+  helio_panel_slow.csv        (now includes Neptune column)
+  helio_polar.csv             (now includes Neptune rows)
+  helio_convergence.csv
 
 Usage:
   pip install matplotlib numpy
-  python make_figures.py
+  python make_figures_v2.py
 
 Author: Carlos Baiget Orts -- asinfreedom@gmail.com
 """
@@ -31,7 +33,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
 import matplotlib.gridspec as gridspec
 import warnings
 warnings.filterwarnings('ignore')
@@ -60,17 +61,21 @@ COLORS = {
     'Mars':    '#C0392B',
     'Jupiter': '#8E44AD',
     'Saturn':  '#16A085',
+    'Neptune': '#1A5276',   # deep blue
 }
 
+# Normalised orbital radii for the polar plots (visual spacing only)
 POLAR_RADIUS = {
-    'Mercury': 0.35,
-    'Venus':   0.50,
-    'Earth':   0.62,
-    'Mars':    0.72,
-    'Jupiter': 0.84,
-    'Saturn':  0.95,
+    'Mercury': 0.22,
+    'Venus':   0.34,
+    'Earth':   0.44,
+    'Mars':    0.53,
+    'Jupiter': 0.66,
+    'Saturn':  0.78,
+    'Neptune': 0.92,
 }
 
+# ── CSV helpers ───────────────────────────────────────────────────────────────
 
 def load_csv(path):
     rows = []
@@ -103,6 +108,7 @@ def load_polar(path='helio_polar.csv'):
             })
     return rows
 
+# ── Figure 1: scatter ─────────────────────────────────────────────────────────
 
 def fig1_scatter():
     dy, sc = load_results()
@@ -115,16 +121,13 @@ def fig1_scatter():
     ax.scatter(dy[mask_rest], sc[mask_rest],
                s=1.5, c='#1a3a5c', alpha=1, linewidths=0,
                label='Candidates')
-    # Draw the actual data point (same style as others but slightly larger)
     ax.scatter(dy[mask_best], sc[mask_best],
                s=8, c='#1a3a5c', alpha=1, linewidths=0, zorder=5)
-    # Draw red circle around it
     ax.scatter(dy[mask_best], sc[mask_best],
                s=40, facecolors='none', edgecolors='#C0392B',
                linewidths=1.8, zorder=6,
                label=r'$T^* = \pm\,1151\,\mathrm{yr}$')
 
-    # Annotations: -1151 label to the right, +1151 label to the left
     for sign, lbl, xoff, yoff, ha in [
         (-1, r'$-1151\,\mathrm{yr}$',  200,  18, 'left'),
         ( 1, r'$+1151\,\mathrm{yr}$', -200,  18, 'right'),
@@ -147,15 +150,14 @@ def fig1_scatter():
     ax.set_ylim(0, 150)
     ax.legend(loc='upper right', framealpha=0.9, markerscale=2)
     fig.tight_layout()
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig1_scatter.pdf', bbox_inches='tight')
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig1_scatter.png', bbox_inches='tight', dpi=150)
+    for fmt in ('pdf', 'png'):
+        fig.patch.set_edgecolor('black'); fig.patch.set_linewidth(1.0)
+        fig.savefig(f'fig1_scatter.{fmt}', bbox_inches='tight',
+                    **(dict(dpi=150) if fmt=='png' else {}))
     plt.close(fig)
     print("  -> fig1_scatter.pdf / .png")
 
+# ── Figure 2: histogram ───────────────────────────────────────────────────────
 
 def fig2_histogram():
     dy, sc = load_results()
@@ -188,23 +190,22 @@ def fig2_histogram():
     ax.set_xlabel(r'Score $S(\Delta t)$ (degrees)')
     ax.set_ylabel('Number of candidates')
     fig.tight_layout()
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig2_histogram.pdf', bbox_inches='tight')
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig2_histogram.png', bbox_inches='tight', dpi=150)
+    for fmt in ('pdf', 'png'):
+        fig.patch.set_edgecolor('black'); fig.patch.set_linewidth(1.0)
+        fig.savefig(f'fig2_histogram.{fmt}', bbox_inches='tight',
+                    **(dict(dpi=150) if fmt=='png' else {}))
     plt.close(fig)
     print("  -> fig2_histogram.pdf / .png")
 
+# ── Figure 3: per-planet offset panels ────────────────────────────────────────
 
 def fig3_panels():
     fast_rows = load_csv('helio_panel_fast.csv')
     slow_rows = load_csv('helio_panel_slow.csv')
     fig, axes = plt.subplots(2, 1, figsize=(9, 6.5),
-                             gridspec_kw={'hspace': 0.48})
+                             gridspec_kw={'hspace': 0.50})
 
-    # top panel
+    # ── Top panel: fast planets ────────────────────────────────────────────────
     ax = axes[0]
     fast_planets = ['Mercury', 'Venus', 'Earth', 'Mars']
     years_f = np.array([r['year'] for r in fast_rows])
@@ -238,29 +239,33 @@ def fig3_panels():
               framealpha=0.95, fontsize=8, borderpad=0.5,
               bbox_transform=ax.transAxes)
 
-    # bottom panel
+    # ── Bottom panel: slow planets (Jupiter, Saturn, Neptune) ──────────────────
     ax = axes[1]
-    slow_planets = ['Jupiter', 'Saturn']
+    # Neptune moves very slowly (~1.2 deg/yr) so its offset oscillates
+    # around a nearly constant value over 100 years.
+    slow_planets = ['Jupiter', 'Saturn', 'Neptune']
     years_s = np.array([r['year'] for r in slow_rows])
 
     all_slow = []
     for p in slow_planets:
         all_slow.extend([r[p] for r in slow_rows])
     ymin_s = min(all_slow) - ypad
-    ymax_s = max(all_slow) + 18  # extra headroom for legend above Saturn
+    ymax_s = max(all_slow) + 22  # extra headroom for legend
 
     for p in slow_planets:
         vals = np.array([r[p] for r in slow_rows])
         mean = vals.mean()
+        lw   = 1.0 if p == 'Neptune' else 1.4
+        ls   = '-.' if p == 'Neptune' else '-'
         ax.plot(years_s, vals, color=COLORS[p], label=p,
-                linewidth=1.4, alpha=0.9)
+                linewidth=lw, linestyle=ls, alpha=0.9)
         ax.axhline(mean, color=COLORS[p], lw=0.8, linestyle=':',
                    alpha=0.55,
                    label=f'mean ({mean:+.1f}' + r'$\degree$)')
 
     ax.axhline(0, color='black', lw=0.5, linestyle=':')
 
-    # annotate Jupiter ~12yr oscillation
+    # Annotate Jupiter ~12-yr oscillation
     ax.annotate('', xy=(32, ymin_s + 4), xytext=(20, ymin_s + 4),
                 arrowprops=dict(arrowstyle='<->', color='#8E44AD', lw=1.0))
     ax.text(26, ymin_s + 2,
@@ -273,7 +278,7 @@ def fig3_panels():
     ax.set_ylabel(r'$\delta_k$ (degrees)')
     ax.set_title('Slow planets -- full 100-year series (weekly resolution)',
                  fontsize=10, pad=4)
-    ax.legend(ncol=2, loc='upper right', framealpha=0.9)
+    ax.legend(ncol=3, loc='upper right', framealpha=0.9)
 
     fig.text(0.005, 0.5,
              r'$\delta_k(t) = \lambda_k(t) - \lambda_k(t - T^*)$  '
@@ -281,21 +286,79 @@ def fig3_panels():
              va='center', ha='left', rotation='vertical',
              fontsize=7.5, color='#555555')
 
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig3_panels.pdf', bbox_inches='tight')
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig3_panels.png', bbox_inches='tight', dpi=150)
+    for fmt in ('pdf', 'png'):
+        fig.patch.set_edgecolor('black'); fig.patch.set_linewidth(1.0)
+        fig.savefig(f'fig3_panels.{fmt}', bbox_inches='tight',
+                    **(dict(dpi=150) if fmt=='png' else {}))
     plt.close(fig)
     print("  -> fig3_panels.pdf / .png")
 
+# ── Figure 4: convergence ─────────────────────────────────────────────────────
 
-def fig4_polar():
+def fig4_convergence():
+    rows = load_csv('helio_convergence.csv')
+    lengths       = [r['series_years'] for r in rows]
+    tstar_scores  = [r['tstar_score']  for r in rows]
+    second_scores = [r['second_score'] for r in rows]
+    gaps = [s - t for s, t in zip(second_scores, tstar_scores)]
+
+    fig, axes = plt.subplots(1, 2, figsize=(9, 3.8), gridspec_kw={'wspace': 0.38})
+
+    ax = axes[0]
+    ax.plot(lengths, tstar_scores,  'o-', color='#C0392B', lw=1.4,
+            markersize=5, label=r'$T^*$ score')
+    ax.plot(lengths, second_scores, 's--', color='#888888', lw=1.2,
+            markersize=4, label='2nd best score')
+    ax.set_xlabel('Series length (years)')
+    ax.set_ylabel(r'Score $S$ (degrees)')
+    ax.set_xscale('log')
+    ax.set_xticks(lengths)
+    ax.set_xticklabels([str(int(l)) for l in lengths], fontsize=8)
+    ax.legend(framealpha=0.9)
+    ax.set_title('Score convergence vs series length', fontsize=10, pad=4)
+
+    ax = axes[1]
+    ax.plot(lengths, gaps, 'D-', color='#4A90D9', lw=1.4, markersize=5)
+    ax.axhline(np.mean(gaps), color='#4A90D9', lw=0.8, linestyle='--', alpha=0.6,
+               label=f'mean gap = {np.mean(gaps):.2f}°')
+    ax.set_xlabel('Series length (years)')
+    ax.set_ylabel(r'Score gap $S_{2nd} - S_{T^*}$ (degrees)')
+    ax.set_xscale('log')
+    ax.set_xticks(lengths)
+    ax.set_xticklabels([str(int(l)) for l in lengths], fontsize=8)
+    ax.legend(framealpha=0.9)
+    ax.set_title(r'Gap between $T^*$ and 2nd best candidate', fontsize=10, pad=4)
+
+    fig.suptitle(
+        r'$T^* = 420{,}403$ days is the global minimum for all series lengths -- '
+        r'from 1 to 100 years',
+        fontsize=9, y=1.02
+    )
+
+    fig.tight_layout()
+    for fmt in ('pdf', 'png'):
+        fig.patch.set_edgecolor('black'); fig.patch.set_linewidth(1.0)
+        fig.savefig(f'fig4_convergence.{fmt}', bbox_inches='tight',
+                    **(dict(dpi=150) if fmt=='png' else {}))
+    plt.close(fig)
+    print("  -> fig4_convergence.pdf / .png")
+
+# ── Figure 5: polar snapshots ─────────────────────────────────────────────────
+
+def fig5_polar():
     rows    = load_polar()
-    planets = ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn']
+    # Read planets in order from file (Mercury ... Neptune)
+    planets_in_file = []
+    for r in rows:
+        if r['planet'] not in planets_in_file:
+            planets_in_file.append(r['planet'])
+    planets = [p for p in ['Mercury','Venus','Earth','Mars',
+                            'Jupiter','Saturn','Neptune']
+               if p in planets_in_file]
+
     epochs  = sorted(set(r['epoch'] for r in rows))
 
+    # 5 epochs + 1 legend cell = 6 panels -> 2 rows x 3 cols
     fig = plt.figure(figsize=(13, 8.5))
     gs  = gridspec.GridSpec(2, 3, figure=fig, hspace=0.38, wspace=0.28)
 
@@ -310,27 +373,37 @@ def fig4_polar():
             col = COLORS[p]
             r_p = POLAR_RADIUS[p]
 
-            lon_ref  = np.radians(pr['lon_ref'])
-            lon_cand = np.radians(pr['lon_cand'])
+            # Normalise angles to [0, 360)
+            a_cand = pr['lon_cand'] % 360.0
+            a_ref  = pr['lon_ref']  % 360.0
 
-            # faint orbit circle
+            lon_cand = np.radians(a_cand)
+            lon_ref  = np.radians(a_ref)
+
+            # Faint orbit circle
             orb = np.linspace(0, 2 * np.pi, 120)
-            ax.plot(orb, [r_p] * 120, color=col, lw=0.25, alpha=0.18,
-                    zorder=1)
+            ax.plot(orb, [r_p] * 120, color=col, lw=0.25, alpha=0.18, zorder=1)
 
-            # arc between positions — always take the short way round
-            diff = lon_ref - lon_cand
-            # normalise diff to (-pi, +pi]
-            diff = (diff + np.pi) % (2 * np.pi) - np.pi
-            n_arc = max(3, int(abs(diff) / np.radians(2)))
-            arc = np.linspace(lon_cand, lon_cand + diff, n_arc)
-            ax.plot(arc, [r_p] * n_arc, color=col, lw=0.9, alpha=0.5)
+            # Arc between positions -- shortest path, wrap-safe
+            diff_deg = a_ref - a_cand
+            diff_deg = (diff_deg + 180.0) % 360.0 - 180.0
+            a_ref_unwrapped = a_cand + diff_deg
 
-            # candidate: open circle
+            n_arc   = max(4, int(abs(diff_deg) / 2.0))
+            arc_deg = np.linspace(a_cand, a_ref_unwrapped, n_arc)
+            arc_rad = np.radians(arc_deg % 360.0)
+
+            wrap_idx = np.where(np.abs(np.diff(arc_rad)) > np.pi)[0]
+            for seg in np.split(arc_rad, wrap_idx + 1):
+                if len(seg) >= 2:
+                    ax.plot(seg, [r_p] * len(seg),
+                            color=col, lw=0.9, alpha=0.5)
+
+            # Candidate: open circle
             ax.scatter(lon_cand, r_p, s=40,
                        facecolors='none', edgecolors=col,
                        linewidths=1.4, zorder=4)
-            # reference: filled circle
+            # Reference: filled circle
             ax.scatter(lon_ref, r_p, s=55, c=col, zorder=5)
 
         ax.set_ylim(0, 1.08)
@@ -340,18 +413,14 @@ def fig4_polar():
         ax.tick_params(axis='x', pad=1)
         ax.grid(True, alpha=0.15, linewidth=0.4)
 
-        # planet initials on first panel
-        pass  # no orbit labels
-
         era = 'BCE' if epoch < 0 else 'CE'
         ax.set_title(f'{abs(epoch)} {era}', fontsize=9, pad=7,
                      fontweight='bold')
 
-    # legend cell
+    # Legend cell
     ax_leg = fig.add_subplot(gs[1, 2])
     ax_leg.axis('off')
     from matplotlib.lines import Line2D
-    # Main legend: color → planet name only
     handles = []
     for p in planets:
         handles.append(Line2D([0],[0], marker='o', color='w',
@@ -362,7 +431,6 @@ def fig4_polar():
                   fontsize=9, handletextpad=0.5, borderpad=1.0,
                   title='Planets', title_fontsize=8.5)
 
-    # Caption below figure explaining filled vs open
     fig.text(0.5, -0.02,
              r'Filled circle = heliocentric position at epoch $t$  |  '
              r'Open circle = position at $t - T^*$ ($T^* \approx 1151$ yr)',
@@ -377,73 +445,20 @@ def fig4_polar():
         fontsize=9.5, y=1.01
     )
 
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig5_polar.pdf', bbox_inches='tight')
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig5_polar.png', bbox_inches='tight', dpi=150)
+    for fmt in ('pdf', 'png'):
+        fig.patch.set_edgecolor('black'); fig.patch.set_linewidth(1.0)
+        fig.savefig(f'fig5_polar.{fmt}', bbox_inches='tight',
+                    **(dict(dpi=150) if fmt=='png' else {}))
     plt.close(fig)
     print("  -> fig5_polar.pdf / .png")
 
 
-
-def fig4_convergence():
-    rows = load_csv('helio_convergence.csv')
-    lengths = [r['series_years'] for r in rows]
-    tstar_scores  = [r['tstar_score']  for r in rows]
-    second_scores = [r['second_score'] for r in rows]
-    gaps = [s - t for s, t in zip(second_scores, tstar_scores)]
-
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.8), gridspec_kw={'wspace': 0.38})
-
-    # Left: T* score and 2nd best vs series length
-    ax = axes[0]
-    ax.plot(lengths, tstar_scores,  'o-', color='#C0392B', lw=1.4,
-            markersize=5, label=r'$T^*$ score')
-    ax.plot(lengths, second_scores, 's--', color='#888888', lw=1.2,
-            markersize=4, label='2nd best score')
-    ax.set_xlabel('Series length (years)')
-    ax.set_ylabel(r'Score $S$ (degrees)')
-    ax.set_xscale('log')
-    ax.set_xticks(lengths)
-    ax.set_xticklabels([str(int(l)) for l in lengths], fontsize=8)
-    ax.legend(framealpha=0.9)
-    ax.set_title('Score convergence vs series length', fontsize=10, pad=4)
-
-    # Right: gap between T* and 2nd best
-    ax = axes[1]
-    ax.plot(lengths, gaps, 'D-', color='#4A90D9', lw=1.4, markersize=5)
-    ax.axhline(np.mean(gaps), color='#4A90D9', lw=0.8, linestyle='--', alpha=0.6,
-               label=f'mean gap = {np.mean(gaps):.2f}°')
-    ax.set_xlabel('Series length (years)')
-    ax.set_ylabel(r'Score gap $S_{2nd} - S_{T^*}$ (degrees)')
-    ax.set_xscale('log')
-    ax.set_xticks(lengths)
-    ax.set_xticklabels([str(int(l)) for l in lengths], fontsize=8)
-    ax.legend(framealpha=0.9)
-    ax.set_title(r'Gap between $T^*$ and 2nd best candidate', fontsize=10, pad=4)
-
-    fig.suptitle(
-        r'$T^* = 420{,}403$ days is the global minimum for all series lengths — '
-        r'from 1 to 100 years',
-        fontsize=9, y=1.02
-    )
-
-    fig.tight_layout()
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig4_convergence.pdf', bbox_inches='tight')
-    fig.patch.set_edgecolor('black')
-    fig.patch.set_linewidth(1.0)
-    fig.savefig('fig4_convergence.png', bbox_inches='tight', dpi=150)
-    plt.close(fig)
-    print("  -> fig4_convergence.pdf / .png")
-
+# ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
     print("Generating figures for the 1151-year quasi-commensurability paper")
-    print("=" * 60)
+    print("7-planet version: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Neptune")
+    print("=" * 65)
 
     required = ['helio_results.csv', 'helio_panel_fast.csv',
                 'helio_panel_slow.csv', 'helio_polar.csv',
@@ -451,29 +466,19 @@ def main():
     missing = [f for f in required if not os.path.exists(f)]
     if missing:
         print(f"ERROR: Missing input files: {', '.join(missing)}")
-        print("Run helio1151.py first to generate these files.")
+        print("Run helio1151_v2.py first to generate these files.")
         return
 
-    print("\n[1/4] Figure 1: Score scatter plot...")
+    print("\n[1/5] Figure 1: Score scatter plot...")
     fig1_scatter()
     print("[2/5] Figure 2: Score histogram...")
     fig2_histogram()
     print("[3/5] Figure 3: Per-planet offset panels...")
     fig3_panels()
-    print("[4/5] Figure 4: Polar snapshots...")
-    fig4_polar()
-
-    print("[5/5] Figure 5: Series length convergence...")
-    if os.path.exists('helio_convergence.csv'):
-        fig4_convergence()
-    else:
-        print("  helio_convergence.csv not found — skipping.")
-
-    print("\n" + "=" * 60)
-    print("All figures saved as PDF and PNG.")
-    print("Upload the PDF files to Overleaf.")
-    print("=" * 60)
-
+    print("[4/5] Figure 4: Series length convergence...")
+    fig4_convergence()
+    print("[5/5] Figure 5: Polar snapshots...")
+    fig5_polar()
 
 if __name__ == '__main__':
     main()
