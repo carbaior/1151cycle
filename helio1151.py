@@ -1,35 +1,33 @@
 #!/usr/bin/env python3
 """
-helio1151.py
-============
+helio1151_v2.py
+===============
 Heliocentric analysis of the multi-planet quasi-commensurability.
 
-Question:
-  What is the time interval T that minimises the mean simultaneous
-  angular displacement of the five naked-eye planets from their
-  heliocentric positions T days earlier?
-
-Bodies: Mercury, Venus, Mars, Jupiter, Saturn (5 naked-eye planets).
+Bodies: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Neptune
+        (seven planets; Uranus excluded by the result itself)
 Frame:  Heliocentric ecliptic longitude, J2000.
 Source: DE441-part1 ephemeris via Skyfield.
 
 Analyses performed:
-  1. Full cycle search: exhaustive search over [-4000, +1500] years
+  1. Full cycle search: exhaustive search over [-1300, +1300] years
   2. Statistical significance of the global minimum
   3. Temporal stability across 12 reference epochs
-  4. Per-planet breakdown at T* 
-  5. Theoretical sidereal residues at T*
+  4. Per-planet breakdown at T*
+  5. Theoretical sidereal residues at T* (including Uranus for comparison)
   6. Secondary minima characterisation
   7. Daily offset extraction for figures (fast + slow planet panels)
-  8. Polar snapshot data for Figure C (5 epochs)
+  8. Polar snapshot data for Figure 5 (5 epochs)
+  9. Series length convergence
 
 Output files:
-  helio_cache.pkl          position cache (heliocentric)
-  helio_results.csv        full search results
-  helio_stats.csv          per-planet statistics at T*
-  helio_panel_fast.csv     Mercury, Venus, Mars offsets — 5yr daily
-  helio_panel_slow.csv     Jupiter, Saturn offsets — 100yr weekly
-  helio_polar.csv          polar snapshots at 5 epochs
+  helio7_de441_cache.pkl.xz    position cache (7 planets), LZMA compressed
+  helio_results.csv            full search results
+  helio_stats.csv              per-planet statistics at T*
+  helio_panel_fast.csv         Mercury, Venus, Earth, Mars offsets -- 5yr daily
+  helio_panel_slow.csv         Jupiter, Saturn, Neptune offsets -- 100yr weekly
+  helio_polar.csv              polar snapshots at 5 epochs
+  helio_convergence.csv        series length convergence
 
 Ephemeris:
   de441-part1.bsp
@@ -38,9 +36,9 @@ Ephemeris:
 
 Usage:
   pip install skyfield numpy scipy
-  python helio1151.py
+  python helio1151_v2.py
 
-Author: Carlos Baiget Orts — asinfreedom@gmail.com
+Author: Carlos Baiget Orts -- asinfreedom@gmail.com
 """
 
 import os
@@ -53,51 +51,48 @@ from skyfield.framelib import ecliptic_J2000_frame
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-# de441_part-1.bsp: covers 13201 BCE to 1969 CE (~1.5 GB)
-# With ref year 0 and search ±1300yr, coverage needed is -1300 to +1300 CE
-# — well within part-1. No need for part-2.
-# Skyfield downloads automatically if not present locally.
 EPHEMERIS    = 'https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de441_part-1.bsp'
-CACHE_FILE   = 'helio6_de441_cache.pkl.xz'  # 6 pre-Uranian planets, de441-part1, LZMA compressed
+CACHE_FILE   = 'helio7_de441_cache.pkl.xz'  # 7 planets (Mercury-Saturn + Neptune)
 
-# Reference epoch (arbitrary — stability test confirms independence)
-REF_YEAR, REF_MONTH, REF_DAY = 0, 6, 15  # year 0: search ±1300yr spans -1300 to +1300 CE
+# Reference epoch (arbitrary -- stability test confirms independence)
+REF_YEAR, REF_MONTH, REF_DAY = 0, 6, 15   # year 0 CE
 
 # Series length: 100 Julian years
 SERIES_DAYS  = 36525
 
 # Search range (years relative to reference epoch)
-# de441-part1 covers up to ~1550 CE; ref year 1 + 1500 = 1501 CE — safe
-SEARCH_MIN   = -1300  # symmetric around year 0: spans -1300 to +1300 CE
-SEARCH_MAX   = +1300  # both within de441-part1 coverage (up to 1969 CE)
+SEARCH_MIN   = -1300
+SEARCH_MAX   = +1300
 STEP_YEARS   = 1
 
-# Bodies: 6 planets visible to the naked eye from outside the solar system
-# Earth is included — from a heliocentric perspective it is a planet like the others
-PLANET_NAMES    = ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn']
-PLANET_TARGETS  = [
+# Bodies: 7 planets.
+# Neptune (residue ~-5 deg) participates in the quasi-commensurability
+# and is included in the primary analysis.
+# Uranus (residue ~-108 deg) does not participate; its residue is
+# reported separately in Analysis 5 for completeness.
+PLANET_NAMES   = ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Neptune']
+PLANET_TARGETS = [
     'mercury barycenter',
     'venus barycenter',
-    'earth',               # Earth barycenter ≈ Earth (Moon mass < 0.01%)
+    'earth',
     'mars barycenter',
     'jupiter barycenter',
     'saturn barycenter',
+    'neptune barycenter',
 ]
 N_PLANETS = len(PLANET_NAMES)
 
-# Known optimal value (used for breakdown and figure extraction)
-T_STAR = 420403   # days — emerges from search, set here for convenience
+# Known optimal value (emerges from search, set here for convenience)
+T_STAR = 420403   # days
 
 # ── Ephemeris and timescale ───────────────────────────────────────────────────
 
 def init_timescale():
-    """Initialise Skyfield timescale only — no ephemeris download."""
     ts = load.timescale()
     ts.julian_calendar_cutoff = GREGORIAN_START
     return ts
 
 def load_ephemeris():
-    """Load (and download if necessary) the DE441 ephemeris."""
     print("Loading ephemeris (downloads if not present locally)...")
     eph = load(EPHEMERIS)
     print("Ephemeris loaded.")
@@ -106,19 +101,10 @@ def load_ephemeris():
 # ── Cache: heliocentric ecliptic longitudes ───────────────────────────────────
 
 def build_cache(ts, eph, jd_start, jd_end):
-    """
-    Compute daily heliocentric ecliptic longitudes (J2000) for the
-    5 naked-eye planets over [jd_start, jd_end].
-
-    Observer: Sun (heliocentric).
-    Frame: ecliptic J2000.
-
-    Returns: (jd_base:int, data:np.ndarray shape (N_days, 5) float32)
-    """
     print(f"\nBuilding heliocentric position cache...")
     print(f"  Range: JD {int(jd_start)} to {int(jd_end)}")
     print(f"  Bodies: {', '.join(PLANET_NAMES)}")
-    print(f"  (This may take several minutes — saved to {CACHE_FILE})\n")
+    print(f"  (This may take several minutes -- saved to {CACHE_FILE})\n")
 
     sun     = eph['sun']
     targets = [eph[t] for t in PLANET_TARGETS]
@@ -133,7 +119,6 @@ def build_cache(ts, eph, jd_start, jd_end):
         t_b  = ts.tt_jd(jds)
 
         for pi, tgt in enumerate(targets):
-            # Heliocentric position: observe planet from the Sun
             astrometric = sun.at(t_b).observe(tgt)
             lat, lon, _ = astrometric.frame_latlon(ecliptic_J2000_frame)
             data[start:end, pi] = lon.degrees.astype(np.float32)
@@ -141,12 +126,12 @@ def build_cache(ts, eph, jd_start, jd_end):
         pct = round(end / n_days * 100, 1)
         print(f"  {pct}% ({end}/{n_days} days)", end='\r')
 
-    print(f"\n  Cache built: {n_days} days × {N_PLANETS} planets.")
+    print(f"\n  Cache built: {n_days} days x {N_PLANETS} planets.")
     return jd_base, data
 
 
 def load_or_build_cache(ts, jd_ref, series_days, search_min_y, search_max_y, eph=None):
-    margin  = series_days + 10
+    margin   = series_days + 10
     jd_start = jd_ref + search_min_y * 365.25 - margin
     jd_end   = jd_ref + search_max_y * 365.25 + margin
 
@@ -155,11 +140,12 @@ def load_or_build_cache(ts, jd_ref, series_days, search_min_y, search_max_y, eph
         with lzma.open(CACHE_FILE, 'rb') as f:
             saved = pickle.load(f)
         ok = (saved['jd_base'] <= jd_start and
-              saved['jd_base'] + len(saved['data']) >= jd_end)
+              saved['jd_base'] + len(saved['data']) >= jd_end and
+              saved['data'].shape[1] == N_PLANETS)
         if ok:
             print("Cache OK.")
             return saved['jd_base'], saved['data']
-        print("Cache range insufficient — rebuilding.")
+        print("Cache range or planet count insufficient -- rebuilding.")
 
     if eph is None:
         eph = load_ephemeris()
@@ -183,7 +169,7 @@ def angular_dist(a, b):
 
 
 def signed_diff(a, b):
-    """Signed circular difference a − b, degrees, result in (−180, +180]."""
+    """Signed circular difference a - b, degrees, result in (-180, +180]."""
     d = (a.astype(np.float64) - b.astype(np.float64)) % 360.0
     return np.where(d > 180.0, d - 360.0, d)
 
@@ -191,13 +177,13 @@ def signed_diff(a, b):
 def score(series_ref, series_cand):
     """
     S(T) = mean(daily_means) + std(daily_means)
-    where daily_mean_i = mean angular distance across all planets on day i.
+    where daily_mean_i = mean angular distance across all N_PLANETS on day i.
     """
-    diff        = angular_dist(series_ref, series_cand)   # (N, 5)
+    diff        = angular_dist(series_ref, series_cand)   # (N, N_PLANETS)
     daily_means = diff.mean(axis=1)                        # (N,)
     return float(daily_means.mean()), float(daily_means.std())
 
-# ── Analysis 1: full cycle search ────────────────────────────────────────────
+# ── Analysis 1: full cycle search ─────────────────────────────────────────────
 
 def run_search(jd_ref, jd_base, data, series_days, search_min, search_max, step):
     s_ref   = get_series(data, jd_base, jd_ref, series_days)
@@ -228,7 +214,7 @@ def run_search(jd_ref, jd_base, data, series_days, search_min, search_max, step)
     print(f"\n  Search complete. {len(results)} candidates evaluated.")
     return results
 
-# ── Analysis 2: statistical significance ─────────────────────────────────────
+# ── Analysis 2: statistical significance ──────────────────────────────────────
 
 def statistical_significance(results, best_score):
     scores = np.array([r['score'] for r in results if r['delta_years'] != 0])
@@ -248,26 +234,16 @@ def statistical_significance(results, best_score):
     print(f"  Max score:           {scores.max():.3f}°")
     print(f"  Z-score:             {z:.2f}σ")
     print(f"  Percentile:          {pct:.1f}% of candidates are worse")
-
-    bins = [0,15,18,20,22,24,26,28,30,35,40,50,60,80,110]
-    counts, _ = np.histogram(scores, bins=bins)
-    print(f"\n  Score distribution:")
-    for i in range(len(counts)):
-        bar = '█' * int(counts[i] / len(scores) * 150)
-        print(f"    {bins[i]:>4}–{bins[i+1]:<4}°: {counts[i]:>5}  {bar}")
     print()
     return z, pct
 
-# ── Analysis 3: temporal stability ───────────────────────────────────────────
+# ── Analysis 3: temporal stability ────────────────────────────────────────────
 
 def stability_test(ts, jd_base, data, series_days, t_star, n=12):
     print(f"\n{'─'*55}")
     print(f"Temporal stability (T* = {t_star} days, {n} reference epochs)")
     print(f"{'─'*55}")
     sc_list = []
-    # Valid epochs: need epoch - T* >= cache_start and epoch + series <= cache_end
-    # With cache ~-1300 to +1300 and T*=1151yr: epoch >= -1300+1151 = -149
-    # Use epochs from -100 to +1100 to stay safely within cache
     for i in range(n):
         year = -100 + i * 110
         t    = ts.utc(year, 6, 15, 12)
@@ -284,19 +260,19 @@ def stability_test(ts, jd_base, data, series_days, t_star, n=12):
         except Exception as e:
             print(f"  Ref year {year:>6}: skipped ({e})")
     if sc_list:
-        print(f"\n  Score range:  {min(sc_list):.3f}° – {max(sc_list):.3f}°")
+        print(f"\n  Score range:  {min(sc_list):.3f}° - {max(sc_list):.3f}°")
         print(f"  Mean score:   {np.mean(sc_list):.3f}°")
-        print(f"  Std of scores:{np.std(sc_list):.4f}°  ← lower = more stable")
+        print(f"  Std of scores:{np.std(sc_list):.4f}°  <- lower = more stable")
     print()
 
-# ── Analysis 4: per-planet breakdown ─────────────────────────────────────────
+# ── Analysis 4: per-planet breakdown ──────────────────────────────────────────
 
 def per_planet_breakdown(jd_ref, jd_base, data, series_days, t_star):
     sr = get_series(data, jd_base, jd_ref,          series_days)
     sc = get_series(data, jd_base, jd_ref - t_star, series_days)
 
-    diff   = angular_dist(sr, sc)    # (N, 5) unsigned
-    sdiff  = signed_diff(sr, sc)     # (N, 5) signed
+    diff   = angular_dist(sr, sc)
+    sdiff  = signed_diff(sr, sc)
 
     mean_abs  = diff.mean(axis=0)
     std_abs   = diff.std(axis=0)
@@ -326,7 +302,6 @@ def per_planet_breakdown(jd_ref, jd_base, data, series_days, t_star):
         })
 
     total_mean = mean_abs.mean()
-    total_std  = mean_abs.mean(axis=0)
     dm = diff.mean(axis=1)
     print(f"{'─'*72}")
     print(f"{'TOTAL':<10} {total_mean:>12.3f}  "
@@ -345,53 +320,61 @@ def per_planet_breakdown(jd_ref, jd_base, data, series_days, t_star):
 
 def sidereal_residues(t_star):
     """
-    For each planet, compute how many degrees short of an integer number
+    For each planet (including Uranus for comparison), compute the
+    sidereal residue at T*: how many degrees short of an integer number
     of complete orbits T* days represents.
     """
-    sidereal = {
+    sidereal_all = {
         'Mercury':   87.9691,
         'Venus':    224.7008,
         'Earth':    365.2500,
         'Mars':     686.9710,
         'Jupiter': 4332.589,
         'Saturn':  10759.22,
+        'Uranus':  30688.5,    # non-participant: residue ~-108 deg
+        'Neptune': 60182.0,
     }
-    print(f"\n{'─'*68}")
+    print(f"\n{'─'*76}")
     print(f"Theoretical sidereal residues at T* = {t_star} days "
           f"({t_star/365.25:.4f} yr)")
-    print(f"{'─'*68}")
+    print(f"  All 8 planets shown; Uranus is the sole non-participant.")
+    print(f"{'─'*76}")
     print(f"{'Planet':<10} {'Sid. period(d)':>15} {'Orbits in T*':>14} "
-          f"{'Frac. res.':>12} {'Residue(°)':>12}")
-    print(f"{'─'*68}")
+          f"{'Frac. res.':>12} {'Residue(°)':>12}  Note")
+    print(f"{'─'*76}")
 
-    residues = []
-    for name in PLANET_NAMES:
-        p     = sidereal[name]
+    residues_participants = []
+    order = ['Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune']
+    for name in order:
+        p     = sidereal_all[name]
         cyc   = t_star / p
         frac  = cyc - int(cyc)
         if frac > 0.5:
             frac -= 1
         deg   = frac * 360
-        residues.append(deg)
+        note  = '<-- NON-PARTICIPANT' if name == 'Uranus' else ''
         print(f"{name:<10} {p:>15.4f} {cyc:>14.4f} "
-              f"{frac:>+12.6f} {deg:>+12.3f}°")
+              f"{frac:>+12.6f} {deg:>+12.3f}°  {note}")
+        if name != 'Uranus':
+            residues_participants.append(deg)
 
-    print(f"{'─'*68}")
-    print(f"  Mean |residue|: {np.mean(np.abs(residues)):.3f}°")
+    print(f"{'─'*76}")
+    print(f"  Mean |residue| (7 participants): "
+          f"{np.mean(np.abs(residues_participants)):.3f}°")
     print(f"  Note: Earth year residue = "
-          f"{((t_star/365.25 - int(t_star/365.25))*360):.3f}°  "
-          f"(T* ≈ integer number of years → helio ≈ geo)")
+          f"{((t_star/365.25 - int(t_star/365.25))*360):.3f}° "
+          f"(T* approx integer number of years)")
     print()
-    return residues
+    return residues_participants
 
-# ── Analysis 6: secondary minima ─────────────────────────────────────────────
+# ── Analysis 6: secondary minima ──────────────────────────────────────────────
 
 def secondary_minima(results, top_n=15):
-    pjs = 19.859   # Jupiter-Saturn conjunction period (years)
+    pjs = 19.859
     print(f"\n{'─'*70}")
     print(f"Top {top_n} best cycles")
     print(f"{'─'*70}")
-    print(f"{'Rank':>4} {'ΔYr':>8} {'ΔDays':>9} "
+    print(f"{'Rank':>4} {'DeltaYr':>8} {'DeltaDays':>9} "
           f"{'Mean°':>8} {'Std°':>7} {'Score°':>8}  Relation")
     print(f"{'─'*70}")
     shown = 0
@@ -400,19 +383,17 @@ def secondary_minima(results, top_n=15):
             continue
         dy  = r['delta_years']
         rat = dy / 1151 if dy != 0 else 0
-        # Check proximity to simple fractions of 1151
         fracs = [(n,d) for d in range(1,5) for n in range(-5*d, 6*d) if n!=0]
         best  = min(fracs, key=lambda f: abs(rat - f[0]/f[1]))
         brat  = best[0]/best[1]
         if abs(rat - brat) < 0.04:
-            rel = f"{best[0]}/{best[1]} × 1151"
+            rel = f"{best[0]}/{best[1]} x 1151"
         else:
-            # Check JS conjunction multiples
             js_mult = round(abs(dy) / pjs)
             if abs(abs(dy) - js_mult * pjs) < 8:
-                rel = f"≈ {js_mult} × P_JS"
+                rel = f"~{js_mult} x P_JS"
             else:
-                rel = f"~{rat:.2f} × 1151"
+                rel = f"~{rat:.2f} x 1151"
         print(f"{shown+1:>4} {dy:>8} {r['delta_days']:>9} "
               f"{r['mean_deg']:>8.3f} {r['std_deg']:>7.3f} "
               f"{r['score']:>8.3f}  {rel}")
@@ -421,41 +402,44 @@ def secondary_minima(results, top_n=15):
             break
     print()
 
-# ── Analysis 7: daily offsets for figures ────────────────────────────────────
+# ── Analysis 7: daily offsets for figures ─────────────────────────────────────
 
 def extract_figure_data(jd_ref, jd_base, data, series_days, t_star):
     sr = get_series(data, jd_base, jd_ref,          series_days)
     sc = get_series(data, jd_base, jd_ref - t_star, series_days)
-    sd = signed_diff(sr, sc)   # shape (series_days, 5)
+    sd = signed_diff(sr, sc)   # shape (series_days, N_PLANETS)
     years = np.arange(series_days) / 365.25
 
-    # Fast panel: Mercury(0), Venus(1), Mars(2) — 5 years, daily
+    idx = {name: i for i, name in enumerate(PLANET_NAMES)}
+
+    # Fast panel: Mercury, Venus, Earth, Mars -- 5 years, daily
     fast_days = int(5 * 365.25)
     with open('helio_panel_fast.csv', 'w', newline='') as f:
         w = csv.writer(f)
         w.writerow(['day', 'year', 'Mercury', 'Venus', 'Earth', 'Mars'])
         for i in range(fast_days):
             w.writerow([i, round(float(years[i]),5),
-                        round(float(sd[i,0]),3),
-                        round(float(sd[i,1]),3),
-                        round(float(sd[i,2]),3),
-                        round(float(sd[i,3]),3)])
-    print("  -> helio_panel_fast.csv  (Mercury, Venus, Earth, Mars — 5yr daily)")
+                        round(float(sd[i, idx['Mercury']]),3),
+                        round(float(sd[i, idx['Venus']]),3),
+                        round(float(sd[i, idx['Earth']]),3),
+                        round(float(sd[i, idx['Mars']]),3)])
+    print("  -> helio_panel_fast.csv  (Mercury, Venus, Earth, Mars -- 5yr daily)")
 
-    # Slow panel: Jupiter(3), Saturn(4) — 100 years, weekly
+    # Slow panel: Jupiter, Saturn, Neptune -- 100 years, weekly
     with open('helio_panel_slow.csv', 'w', newline='') as f:
         w = csv.writer(f)
-        w.writerow(['day', 'year', 'Jupiter', 'Saturn'])
+        w.writerow(['day', 'year', 'Jupiter', 'Saturn', 'Neptune'])
         for i in range(0, series_days, 7):
             w.writerow([i, round(float(years[i]),4),
-                        round(float(sd[i,4]),3),
-                        round(float(sd[i,5]),3)])
-    print("  -> helio_panel_slow.csv  (Jupiter, Saturn — 100yr weekly)")
+                        round(float(sd[i, idx['Jupiter']]),3),
+                        round(float(sd[i, idx['Saturn']]),3),
+                        round(float(sd[i, idx['Neptune']]),3)])
+    print("  -> helio_panel_slow.csv  (Jupiter, Saturn, Neptune -- 100yr weekly)")
 
-# ── Analysis 8: polar snapshot data ──────────────────────────────────────────
+# ── Analysis 8: polar snapshot data ───────────────────────────────────────────
 
 def extract_polar_data(ts, jd_base, data, t_star):
-    snapshot_years = [50, 200, 400, 600, 800]  # epoch-1151 range: -1101 to -351 CE — safely within cache
+    snapshot_years = [50, 200, 400, 600, 800]
     rows = []
     for yr in snapshot_years:
         t   = ts.utc(yr, 6, 15, 12)
@@ -481,9 +465,8 @@ def extract_polar_data(ts, jd_base, data, t_star):
                                           'lon_ref','lon_cand','offset'])
         w.writeheader()
         w.writerows(rows)
-    print("  -> helio_polar.csv  (5 epochs × 6 planets)")
+    print("  -> helio_polar.csv  (5 epochs x 7 planets)")
 
-    # Print offset summary per epoch
     print(f"\n  Offset summary (signed, degrees):")
     print(f"  {'Planet':<10}", end='')
     for yr in snapshot_years:
@@ -498,18 +481,9 @@ def extract_polar_data(ts, jd_base, data, t_star):
         print()
     print()
 
+# ── Analysis 9: series length convergence ─────────────────────────────────────
 
 def series_length_convergence(jd_ref, jd_base, data, t_star):
-    """
-    Demonstrate that the result is stable across series lengths.
-    For each series length in LENGTHS:
-      - Run the full search and record the global minimum and its score
-      - Record the score of T* specifically
-      - Record the rank of T* among all candidates
-    Shows that T* emerges as the global minimum even with short series,
-    and that scores converge quickly as series length increases.
-    """
-    # Series lengths to test: from 1 year to 100 years
     LENGTHS = [
         (1,    365),
         (2,    730),
@@ -522,7 +496,7 @@ def series_length_convergence(jd_ref, jd_base, data, t_star):
 
     print(f"\n{'─'*72}")
     print(f"Series length convergence analysis")
-    print(f"T* = {t_star} days — does it emerge as global minimum for short series?")
+    print(f"T* = {t_star} days -- does it emerge as global minimum for short series?")
     print(f"{'─'*72}")
     print(f"{'Length':>8} {'N days':>8} {'Best T (yr)':>12} {'Best score':>12} "
           f"{'T* score':>10} {'T* rank':>8} {'2nd best':>10}")
@@ -552,7 +526,6 @@ def series_length_convergence(jd_ref, jd_base, data, t_star):
         best_dy, best_sc = results_l[0]
         second_sc = results_l[1][1] if len(results_l) > 1 else float('nan')
 
-        # Score and rank of T*
         tstar_scores = [(dy, sc) for dy, sc in results_l if abs(abs(dy) - 1151) <= 1]
         if tstar_scores:
             tstar_sc = min(s for _, s in tstar_scores)
@@ -578,7 +551,6 @@ def series_length_convergence(jd_ref, jd_base, data, t_star):
     print(f"{'─'*72}")
     print()
 
-    # Save to CSV for figure
     import csv as csv_mod
     with open('helio_convergence.csv', 'w', newline='') as f:
         w = csv_mod.DictWriter(f, fieldnames=list(conv_rows[0].keys()))
@@ -588,18 +560,19 @@ def series_length_convergence(jd_ref, jd_base, data, t_star):
     return conv_rows
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
-    print("=" * 65)
+    print("=" * 68)
     print("  Heliocentric Quasi-Commensurability Analysis")
-    print("  Pre-Uranian planets: Mercury · Venus · Earth · Mars · Jupiter · Saturn")
-    print("=" * 65)
+    print("  Planets: Mercury · Venus · Earth · Mars · Jupiter · Saturn · Neptune")
+    print("  (Uranus residue ~-108 deg: non-participant, reported in Analysis 5)")
+    print("=" * 68)
     print()
 
     ts = init_timescale()
 
-    t_ref = ts.utc(REF_YEAR, REF_MONTH, REF_DAY, 12)
+    t_ref  = ts.utc(REF_YEAR, REF_MONTH, REF_DAY, 12)
     jd_ref = int(t_ref.tdb)
 
     print(f"\nReference epoch: {REF_YEAR}/{REF_MONTH}/{REF_DAY}  (JD {jd_ref})")
@@ -608,26 +581,25 @@ def main():
     print(f"Candidates:      {SEARCH_MAX - SEARCH_MIN + 1}")
     print()
 
-    # Load cache — ephemeris downloaded only if cache is absent or insufficient
     jd_base, data = load_or_build_cache(
         ts, jd_ref, SERIES_DAYS, SEARCH_MIN, SEARCH_MAX
     )
 
-    # ── 1. Full search ────────────────────────────────────────────────────────
+    # ── 1. Full search ─────────────────────────────────────────────────────────
     print("\n[1/9] Full cycle search...")
     results = run_search(
         jd_ref, jd_base, data,
         SERIES_DAYS, SEARCH_MIN, SEARCH_MAX, STEP_YEARS
     )
     best = next(r for r in results if r['delta_years'] != 0)
-    print(f"\n{'═'*50}")
+    print(f"\n{'='*50}")
     print(f"  GLOBAL MINIMUM:")
     print(f"  T*      = {best['delta_days']:,} days")
     print(f"  T* / yr = {best['delta_days']/365.25:.6f} years")
-    print(f"  Mean δ  = {best['mean_deg']:.4f}°")
-    print(f"  Std  δ  = {best['std_deg']:.4f}°")
+    print(f"  Mean d  = {best['mean_deg']:.4f}°")
+    print(f"  Std  d  = {best['std_deg']:.4f}°")
     print(f"  Score   = {best['score']:.4f}°")
-    print(f"{'═'*50}")
+    print(f"{'='*50}")
 
     with open('helio_results.csv', 'w', newline='') as f:
         w = csv.DictWriter(f,
@@ -636,27 +608,27 @@ def main():
         w.writerows(results)
     print("  -> helio_results.csv")
 
-    # ── 2. Statistical significance ───────────────────────────────────────────
+    # ── 2. Statistical significance ────────────────────────────────────────────
     print("\n[2/9] Statistical significance...")
     statistical_significance(results, best['score'])
 
-    # ── 3. Temporal stability ─────────────────────────────────────────────────
+    # ── 3. Temporal stability ──────────────────────────────────────────────────
     print("\n[3/9] Temporal stability...")
     stability_test(ts, jd_base, data, SERIES_DAYS, T_STAR)
 
-    # ── 4. Per-planet breakdown ───────────────────────────────────────────────
-    print("\n[4/9] Per-planet breakdown at T* = 420,403 days...")
+    # ── 4. Per-planet breakdown ────────────────────────────────────────────────
+    print(f"\n[4/9] Per-planet breakdown at T* = {T_STAR} days...")
     per_planet_breakdown(jd_ref, jd_base, data, SERIES_DAYS, T_STAR)
 
-    # ── 5. Theoretical sidereal residues ──────────────────────────────────────
-    print("\n[5/9] Theoretical sidereal residues...")
+    # ── 5. Theoretical sidereal residues ───────────────────────────────────────
+    print("\n[5/9] Theoretical sidereal residues (all 8 planets)...")
     sidereal_residues(T_STAR)
 
-    # ── 6. Secondary minima ───────────────────────────────────────────────────
+    # ── 6. Secondary minima ────────────────────────────────────────────────────
     print("\n[6/9] Secondary minima...")
     secondary_minima(results, top_n=15)
 
-    # ── 7. Figure data: daily offsets ─────────────────────────────────────────
+    # ── 7. Figure data: daily offsets ──────────────────────────────────────────
     print("\n[7/9] Extracting figure data (panel plots)...")
     extract_figure_data(jd_ref, jd_base, data, SERIES_DAYS, T_STAR)
 
@@ -664,20 +636,20 @@ def main():
     print("\n[8/9] Extracting polar snapshot data...")
     extract_polar_data(ts, jd_base, data, T_STAR)
 
-    # ── 9. Series length convergence ──────────────────────────────────────────
+    # ── 9. Series length convergence ───────────────────────────────────────────
     print("\n[9/9] Series length convergence analysis...")
     series_length_convergence(jd_ref, jd_base, data, T_STAR)
 
-    print("\n" + "=" * 65)
+    print("\n" + "=" * 68)
     print("  All analyses complete. Output files:")
-    print("    helio6_de441_cache.pkl.xz  position cache (LZMA compressed)")
-    print("    helio_results.csv        full search — scatter plot data")
-    print("    helio_stats.csv          per-planet statistics at T*")
-    print("    helio_panel_fast.csv     Mercury, Venus, Earth, Mars — Fig A top")
-    print("    helio_panel_slow.csv     Jupiter, Saturn — Fig A bottom")
-    print("    helio_polar.csv          5 epochs x 6 planets — Fig C")
-    print("    helio_convergence.csv    series length convergence — Fig D")
-    print("=" * 65)
+    print("    helio7_de441_cache.pkl.xz   position cache (LZMA compressed)")
+    print("    helio_results.csv           full search -- scatter plot data")
+    print("    helio_stats.csv             per-planet statistics at T*")
+    print("    helio_panel_fast.csv        Mercury, Venus, Earth, Mars -- Fig 3 top")
+    print("    helio_panel_slow.csv        Jupiter, Saturn, Neptune -- Fig 3 bottom")
+    print("    helio_polar.csv             5 epochs x 7 planets -- Fig 5")
+    print("    helio_convergence.csv       series length convergence -- Fig 4")
+    print("=" * 68)
 
 
 if __name__ == '__main__':
