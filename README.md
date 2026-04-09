@@ -34,6 +34,17 @@ The interval 1,151 years was known to Babylonian astronomers as the period after
 
 ---
 
+## Visual demonstration
+
+A visual animation of the phenomenon is available on YouTube:
+[1151 Years Later: The Sky Repeats](https://www.youtube.com/watch?v=BtWm_OIzsJk)
+
+The animation shows planetary configurations separated by 1,151 years
+superimposed across several millennia, illustrating the quasi-commensurability
+directly.
+
+---
+
 ## Repository structure
 
 ```
